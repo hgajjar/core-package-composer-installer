@@ -49,7 +49,7 @@ class CoreManager implements PluginInterface, EventSubscriberInterface
      *
      * @var string
      */
-    protected $ioPrefix = '  - <comment>MagentoCoreInstaller: </comment>';
+    protected $ioPrefix = '  - <comment>CorePackageInstaller: </comment>';
 
     /**
      * @param Composer $composer
@@ -123,7 +123,7 @@ class CoreManager implements PluginInterface, EventSubscriberInterface
         $options = new Options($this->composer->getPackage()->getExtra());
         $installedCorePackages = array();
         foreach ($event->getInstalledRepo()->getPackages() as $package) {
-            if ($package->getType() === $options->getMagentoCorePackageType()) {
+            if ($this->isCorePackage($package, $options)) {
                 $installedCorePackages[$package->getName()] = $package;
             }
         }
@@ -134,7 +134,7 @@ class CoreManager implements PluginInterface, EventSubscriberInterface
 
         foreach ($operations as $operation) {
             $p = $operation->getPackage();
-            if ($package->getType() === $options->getMagentoCorePackageType()) {
+            if ($this->isCorePackage($package, $options)) {
                 switch ($operation->getJobType()) {
                     case "uninstall":
                         unset($installedCorePackages[$p->getName()]);
@@ -167,7 +167,8 @@ class CoreManager implements PluginInterface, EventSubscriberInterface
         }
 
         $options = new Options($this->composer->getPackage()->getExtra());
-        if ($package->getType() === $options->getMagentoCorePackageType()) {
+
+        if ($this->isCorePackage($package, $options)) {
             $this->ensureRootDirExists($options);
 
             $this->io->write(
@@ -176,12 +177,12 @@ class CoreManager implements PluginInterface, EventSubscriberInterface
                     $this->ioPrefix,
                     $package->getPrettyName(),
                     $package->getVersion(),
-                    $options->getMagentoRootDir()
+                    $options->getCoreRootDir()
                 )
             );
 
             $this->getInstaller($options, $package)
-                ->install($this->getInstallPath($package), $options->getMagentoRootDir());
+                ->install($this->getInstallPath($package), $options->getCoreRootDir());
         }
     }
 
@@ -200,19 +201,19 @@ class CoreManager implements PluginInterface, EventSubscriberInterface
         }
 
         $options = new Options($this->composer->getPackage()->getExtra());
-        if ($package->getType() === $options->getMagentoCorePackageType()) {
+        if ($this->isCorePackage($package, $options)) {
             $this->io->write(
                 sprintf(
                     '%s<info>Removing: "%s" version: "%s" from: "%s"</info>',
                     $this->ioPrefix,
                     $package->getPrettyName(),
                     $package->getVersion(),
-                    $options->getMagentoRootDir()
+                    $options->getCoreRootDir()
                 )
             );
 
             $this->getInstaller($options, $package)
-                ->unInstall($this->getInstallPath($package), $options->getMagentoRootDir());
+                ->unInstall($this->getInstallPath($package), $options->getCoreRootDir());
         }
     }
 
@@ -223,8 +224,8 @@ class CoreManager implements PluginInterface, EventSubscriberInterface
      */
     private function ensureRootDirExists(Options $options)
     {
-        if (!file_exists($options->getMagentoRootDir())) {
-            mkdir($options->getMagentoRootDir(), 0755, true);
+        if (!file_exists($options->getCoreRootDir())) {
+            mkdir($options->getCoreRootDir(), 0755, true);
         }
     }
 
@@ -238,7 +239,7 @@ class CoreManager implements PluginInterface, EventSubscriberInterface
         $exclude = new Exclude($this->getInstallPath($package), $options->getDeployExcludes());
 
         $gitIgnore = new GitIgnore(
-            sprintf("%s/.gitignore", $options->getMagentoRootDir()),
+            sprintf("%s/.gitignore", $options->getCoreRootDir()),
             $options->getIgnoreDirectories(),
             $options->appendToGitIgnore(),
             $options->gitIgnoreFunctionalityEnabled()
@@ -246,5 +247,16 @@ class CoreManager implements PluginInterface, EventSubscriberInterface
 
         $installer = new CoreInstaller($exclude, $gitIgnore, $this->filesystem);
         return $installer;
+    }
+
+    /**
+     * @param \Composer\Package\PackageInterface $package
+     * @param Options $options
+     * @return bool
+     */
+    private function isCorePackage(PackageInterface $package, Options $options)
+    {
+        return $package->getType() === $options->getCorePackageType() ||
+            $package->getName() === $options->getCorePackageName();
     }
 }
