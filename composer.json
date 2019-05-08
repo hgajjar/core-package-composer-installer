@@ -1,6 +1,6 @@
 {
-    "name": "aydin-hassan/magento-core-composer-installer",
-    "description": "A composer plugin for managing Magento Core",
+    "name": "hgajjar/core-package-composer-installer",
+    "description": "A composer plugin for installing core composer package",
     "type": "composer-plugin",
     "license": "MIT",
     "require": {
@@ -13,12 +13,6 @@
         "phpunit/phpunit": "~4.3",
         "mikey179/vfsStream": "~1.4"
     },
-    "authors": [
-        {
-            "name": "Aydin Hassan",
-            "email": "aydin@hotmail.co.uk"
-        }
-    ],
     "autoload": {
         "psr-4": {
             "AydinHassan\\MagentoCoreComposerInstaller\\": "src/"

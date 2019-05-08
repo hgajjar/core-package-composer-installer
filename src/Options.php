@@ -23,92 +23,7 @@ class Options
      * @var array Directories to ignore
      * to reduce the size of the git ignore
      */
-    protected $ignoreDirectories = array(
-        '/app/code/core/Mage',
-        '/app/code/core/Zend',
-        '/app/code/core/Enterprise',
-        '/dev',
-        '/lib/Zend',
-        '/lib/Varien',
-        '/lib/Magento',
-        '/lib/PEAR',
-        '/lib/Mage',
-        '/lib/phpseclib',
-        '/lib/flex',
-        '/lib/LinLibertineFont',
-        '/downloader',
-        '/js/extjs',
-        '/js/prototype',
-        '/js/calendar',
-        '/js/mage',
-        '/js/varien',
-        '/js/tiny_mce',
-        '/lib/Apache',
-        '/app/code/community/Phoenix/Moneybookers',
-        '/app/design/adminhtml/default/default/template/bundle',
-        '/app/design/adminhtml/default/default/template/catalog',
-        '/app/design/adminhtml/default/default/template/customer',
-        '/app/design/adminhtml/default/default/template/downloadable',
-        '/app/design/adminhtml/default/default/template/newsletter',
-        '/app/design/adminhtml/default/default/template/payment',
-        '/app/design/adminhtml/default/default/template/sales',
-        '/app/design/adminhtml/default/default/template/system',
-        '/app/design/adminhtml/default/default/template/widget',
-        '/app/design/adminhtml/default/default/template/xmlconnect',
-        '/app/design/frontend/base/default/template/bundle',
-        '/app/design/frontend/base/default/template/catalog',
-        '/app/design/frontend/base/default/template/checkout',
-        '/app/design/frontend/base/default/template/customer',
-        '/app/design/frontend/base/default/template/downloadable',
-        '/app/design/frontend/base/default/template/page',
-        '/app/design/frontend/base/default/template/payment',
-        '/app/design/frontend/base/default/template/paypal',
-        '/app/design/frontend/base/default/template/reports',
-        '/app/design/frontend/base/default/template/sales',
-        '/app/design/frontend/base/default/template/wishlist',
-        '/app/design/frontend/default/iphone/template/catalog',
-        '/app/design/frontend/default/iphone/template/checkout',
-        '/app/design/frontend/default/iphone/template/page',
-        '/app/design/frontend/default/iphone/template/sales',
-        '/app/design/frontend/default/iphone/template/wishlist',
-        '/app/design/frontend/rwd/default/template/bundle',
-        '/app/design/frontend/rwd/default/template/catalog',
-        '/app/design/frontend/rwd/default/template/checkout',
-        '/app/design/frontend/rwd/default/template/customer',
-        '/app/design/frontend/rwd/default/template/downloadable',
-        '/app/design/frontend/base/default/template/cataloginventory',
-        '/app/design/frontend/base/default/template/catalogsearch',
-        '/app/design/frontend/base/default/template/pagecache',
-        '/app/design/frontend/default/iphone/template/catalogsearch',
-        '/app/design/frontend/rwd/default/template/cataloginventory',
-        '/app/design/frontend/rwd/default/template/catalogsearch',
-        '/app/design/frontend/rwd/default/template/configurableswatches',
-        '/app/design/frontend/rwd/default/template/email',
-        '/app/design/frontend/rwd/default/template/page',
-        '/app/design/frontend/rwd/default/template/paypal',
-        '/app/design/frontend/rwd/default/template/persistent',
-        '/app/design/frontend/rwd/default/template/reports',
-        '/app/design/frontend/rwd/default/template/sales',
-        '/app/design/frontend/rwd/default/template/wishlist',
-        '/app/design/install/default/default/template/install',
-        '/skin/adminhtml/default/default/images/xmlconnect',
-        '/skin/frontend/base/default/images/moneybookers',
-        '/skin/frontend/rwd/default/scss',
-        '/app/design/adminhtml/default/default/template/paypal',
-        '/app/design/adminhtml/default/default/template/permissions',
-        '/app/design/adminhtml/default/default/template/report',
-        '/app/design/adminhtml/default/default/template/tax',
-        '/app/design/frontend/base/default/template/cms',
-        '/app/design/frontend/base/default/template/email',
-        '/app/design/frontend/base/default/template/moneybookers',
-        '/app/design/frontend/base/default/template/oauth',
-        '/app/design/frontend/base/default/template/review',
-        '/app/design/frontend/default/modern/template/catalog',
-        '/skin/adminhtml/default/default/xmlconnect',
-        '/skin/frontend/base/default/images/cookies',
-        '/skin/frontend/base/default/images/xmlconnect',
-        '/app/design/frontend/default/modern/template/catalogsearch'
-    );
+    protected $ignoreDirectories = [];
 
     /**
      * Whether to append to the existing git ignore or remove it
@@ -130,14 +45,19 @@ class Options
      *
      * @var string
      */
-    protected $magentoRootDir;
+    protected $coreRootDir;
 
     /**
      * Name of Magento Core Package
      *
      * @var string
      */
-    protected $magentoCorePackageType = 'magento-core';
+    protected $corePackageType = 'magento-core';
+
+    /**
+     * @var string
+     */
+    protected $corePackageName;
 
     /**
      * @param array $packageExtra
@@ -145,8 +65,8 @@ class Options
     public function __construct(array $packageExtra)
     {
         $coreInstallerOptions = array();
-        if (isset($packageExtra['magento-core-deploy']) && is_array($packageExtra['magento-core-deploy'])) {
-            $coreInstallerOptions = $packageExtra['magento-core-deploy'];
+        if (isset($packageExtra['core-deploy']) && is_array($packageExtra['core-deploy'])) {
+            $coreInstallerOptions = $packageExtra['core-deploy'];
         }
 
         //merge excludes from root package composer.json file with default excludes
@@ -175,15 +95,19 @@ class Options
             $this->appendToGitIgnore = (bool) $coreInstallerOptions['git-ignore-append'];
         }
 
-        if (!isset($packageExtra['magento-root-dir'])) {
-            throw new \InvalidArgumentException("magento-root-dir must be specified in root package");
+        if (!isset($packageExtra['core-root-dir'])) {
+            throw new \InvalidArgumentException("core-root-dir must be specified in root package");
         }
 
-        if (isset($packageExtra['magento-core-package-type'])) {
-            $this->magentoCorePackageType = $packageExtra['magento-core-package-type'];
+        if (isset($packageExtra['core-package-type'])) {
+            $this->corePackageType = $packageExtra['core-package-type'];
         }
 
-        $this->magentoRootDir = rtrim($packageExtra['magento-root-dir'], "/");
+        if (isset($packageExtra['core-package-name'])) {
+            $this->corePackageName = $packageExtra['core-package-name'];
+        }
+
+        $this->coreRootDir = rtrim($packageExtra['core-root-dir'], "/");
     }
 
     /**
@@ -221,16 +145,24 @@ class Options
     /**
      * @return string
      */
-    public function getMagentoRootDir()
+    public function getCoreRootDir()
     {
-        return $this->magentoRootDir;
+        return $this->coreRootDir;
     }
 
     /**
      * @return string
      */
-    public function getMagentoCorePackageType()
+    public function getCorePackageType()
     {
-        return $this->magentoCorePackageType;
+        return $this->corePackageType;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getCorePackageName()
+    {
+        return $this->corePackageName;
     }
 }
